@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProductManagement Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .sidebar { background: #1e293b; min-height: 100vh; width: 250px; position: fixed; top: 0; left: 0; z-index: 100; }
+        .sidebar .brand { color: #fff; font-size: 1.2rem; font-weight: 700; padding: 20px; border-bottom: 1px solid #334155; }
+        .sidebar .nav-link { color: #94a3b8; padding: 12px 20px; transition: all 0.2s; cursor: pointer; display: block; }
+        .sidebar .nav-link:hover { color: #fff; background: #334155; }
+        .sidebar .nav-link.active { color: #fff; background: #3b82f6; }
+        .main-content { margin-left: 250px; padding: 30px; min-height: 100vh; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+        .stat-card { border-radius: 12px; color: white; padding: 24px; position: relative; overflow: hidden; }
+        .stat-card .icon-bg { position: absolute; right: -10px; top: -10px; font-size: 5rem; opacity: 0.1; }
+        .section { display: none; }
+        .section.active { display: block; }
+        #loginPage { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #1e293b; }
+        .login-card { width: 420px; border-radius: 16px; padding: 40px; }
+        .product-img-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .product-img-placeholder { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 150px; padding: 10px 0; }
+        .bar { flex: 1; background: #3b82f6; border-radius: 4px 4px 0 0; min-width: 30px; transition: height 0.5s; position: relative; cursor: pointer; }
+        .bar:hover { background: #2563eb; }
+        .bar .bar-label { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; white-space: nowrap; color: #64748b; }
+        .bar .bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: bold; color: #1e293b; white-space: nowrap; }
+        .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .upload-area:hover { border-color: #3b82f6; background: #f0f7ff; }
+        .categoria-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: #e0f2fe; color: #0369a1; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+    <div class="card login-card shadow-lg">
+        <div class="text-center mb-4">
+            <div class="bg-primary rounded-circle d-inline-flex p-3 mb-3">
+                <i class="bi bi-box-seam text-white fs-3"></i>
+            </div>
+            <h3 class="fw-bold">Admin Titan Store</h3>
+            <p class="text-muted">Panel Administrativo</p>
+        </div>
+        <div id="loginError" class="alert alert-danger d-none"></div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Email</label>
+            <input type="email" id="loginEmail" class="form-control form-control-lg" placeholder="admin@test.com">
+        </div>
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Contraseña</label>
+            <input type="password" id="loginPassword" class="form-control form-control-lg" placeholder="••••••••">
+        </div>
+        <button class="btn btn-primary btn-lg w-100" onclick="login()"><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión</button>
+        <hr>
+        <button class="btn btn-outline-secondary w-100" onclick="showRegisterModal()">Crear cuenta</button>
+    </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="modal fade" id="registerModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Crear cuenta</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div id="registerError" class="alert alert-danger d-none"></div>
+            <div class="mb-3"><label class="form-label">Username</label><input type="text" id="regUsername" class="form-control"></div>
+            <div class="mb-3"><label class="form-label">Email</label><input type="email" id="regEmail" class="form-control"></div>
+            <div class="mb-3"><label class="form-label">Contraseña</label><input type="password" id="regPassword" class="form-control"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-primary" onclick="register()">Registrarse</button>
+        </div>
+    </div></div>
+</div>
+
+<!-- DASHBOARD APP -->
+<div id="dashboardPage" style="display:none;">
+    <div class="sidebar">
+        <div class="brand"><i class="bi bi-box-seam me-2"></i>Admin Titan Store</div>
+        <nav class="mt-3">
+            <a class="nav-link active" onclick="showSection('dashboard', this)"><i class="bi bi-grid-1x2 me-2"></i>Dashboard</a>
+            <a class="nav-link" onclick="showSection('products', this)"><i class="bi bi-box me-2"></i>Productos</a>
+            <a class="nav-link" onclick="showSection('orders', this)"><i class="bi bi-receipt me-2"></i>Órdenes</a>
+        </nav>
+        <div class="position-absolute bottom-0 w-100 p-3">
+            <a href="/shop.html" target="_blank" class="btn btn-outline-info w-100 mb-2"><i class="bi bi-shop me-2"></i>Ver Tienda</a>
+            <button class="btn btn-outline-danger w-100" onclick="logout()"><i class="bi bi-box-arrow-left me-2"></i>Cerrar sesión</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <!-- DASHBOARD -->
+        <div id="dashboardSection" class="section active">
+            <div class="mb-4"><h4 class="fw-bold mb-0">Dashboard</h4><small class="text-muted">Resumen general del negocio</small></div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3"><div class="stat-card bg-primary"><i class="bi bi-box icon-bg"></i><p class="mb-1 opacity-75 small">Total Productos</p><h2 class="fw-bold mb-0" id="statProducts">0</h2></div></div>
+                <div class="col-md-3"><div class="stat-card bg-success"><i class="bi bi-receipt icon-bg"></i><p class="mb-1 opacity-75 small">Total Órdenes</p><h2 class="fw-bold mb-0" id="statOrders">0</h2></div></div>
+                <div class="col-md-3"><div class="stat-card bg-warning"><i class="bi bi-cash icon-bg"></i><p class="mb-1 opacity-75 small">Ingresos Totales</p><h2 class="fw-bold mb-0" id="statRevenue">$0</h2></div></div>
+                <div class="col-md-3"><div class="stat-card bg-danger"><i class="bi bi-clock icon-bg"></i><p class="mb-1 opacity-75 small">Órdenes Pendientes</p><h2 class="fw-bold mb-0" id="statPending">0</h2></div></div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-1">Ventas por Producto</h6>
+                            <small class="text-muted d-block mb-3">Ingresos generados por cada producto</small>
+                            <div class="bar-chart" id="salesChart"></div>
+                            <div style="height:25px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Top Productos Vendidos</h6>
+                            <div id="topProducts"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Órdenes Recientes</h6>
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light"><tr><th>#</th><th>Cliente</th><th>Total</th><th>Estado</th></tr></thead>
+                                <tbody id="recentOrdersTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Stock por Producto</h6>
+                            <div id="stockChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTS -->
+        <div id="productsSection" class="section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div><h4 class="fw-bold mb-0">Productos</h4><small class="text-muted">Gestión del catálogo</small></div>
+                <button class="btn btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg me-2"></i>Nuevo Producto</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex gap-2">
+                            <select id="filterCategoria" class="form-select form-select-sm" onchange="filterProducts()" style="width:150px;">
+                                <option value="">Todas las categorías</option>
+                                <option>General</option><option>Electrónica</option><option>Ropa</option>
+                                <option>Hogar</option><option>Deportes</option><option>Alimentos</option>
+                            </select>
+                        </div>
+                        <input type="text" id="searchInput" class="form-control w-25" placeholder="Buscar..." oninput="filterProducts()">
+                    </div>
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr><th>Foto</th><th>Nombre</th><th>Categoría</th><th>Descripción</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody id="productsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDERS -->
+        <div id="ordersSection" class="section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div><h4 class="fw-bold mb-0">Órdenes</h4><small class="text-muted">Pedidos de clientes</small></div>
+                <div class="d-flex gap-2">
+                    <select id="filterStatus" class="form-select" onchange="filterOrders()" style="width:150px;">
+                        <option value="">Todos los estados</option>
+                        <option>Pendiente</option><option>En proceso</option><option>Enviado</option><option>Entregado</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="loadOrders()"><i class="bi bi-arrow-clockwise me-2"></i>Actualizar</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr><th>#</th><th>Cliente</th><th>Email</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Detalle</th></tr>
+                        </thead>
+                        <tbody id="ordersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="modalTitle">Nuevo Producto</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <input type="hidden" id="productId">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3"><label class="form-label fw-semibold">Nombre</label><input type="text" id="productNombre" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label fw-semibold">Descripción</label><textarea id="productDescripcion" class="form-control" rows="3"></textarea></div>
+                    <div class="row">
+                        <div class="col mb-3"><label class="form-label fw-semibold">Precio</label><input type="number" id="productPrecio" class="form-control" step="0.01"></div>
+                        <div class="col mb-3"><label class="form-label fw-semibold">Stock</label><input type="number" id="productStock" class="form-control"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Categoría</label>
+                        <select id="productCategoria" class="form-select">
+                            <option>General</option><option>Electrónica</option><option>Ropa</option>
+                            <option>Hogar</option><option>Deportes</option><option>Alimentos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Foto del producto</label>
+                    <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                        <img id="imagePreview" src="" style="display:none;width:100%;height:150px;object-fit:cover;border-radius:8px;" alt="">
+                        <div id="uploadPlaceholder">
+                            <i class="bi bi-cloud-upload fs-2 text-muted"></i>
+                            <p class="text-muted small mb-0 mt-2">Clic para subir imagen</p>
+                        </div>
+                    </div>
+                    <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="previewImage(event)">
+                    <div id="currentImage" class="mt-2 text-center" style="display:none;">
+                        <img id="currentImagePreview" src="" style="width:100%;height:150px;object-fit:cover;border-radius:8px;" alt="">
+                        <small class="text-muted">Imagen actual</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveProduct()"><i class="bi bi-save me-2"></i>Guardar</button>
+        </div>
+    </div></div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Detalle de Orden</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="orderDetailBody"></div>
+        <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+    </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let token = localStorage.getItem('token');
+let allProducts = [], allOrders = [];
+
+if (token) showDashboard();
+
+// AUTH
+async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    try {
+        const res = await fetch('/api/Auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+        if (!res.ok) throw new Error('Credenciales incorrectas');
+        const data = await res.json();
+        token = data.token;
+        localStorage.setItem('token', token);
+        showDashboard();
+    } catch(e) {
+        const err = document.getElementById('loginError');
+        err.textContent = e.message; err.classList.remove('d-none');
+    }
+}
+
+async function register() {
+    const username = document.getElementById('regUsername').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    try {
+        const res = await fetch('/api/Auth/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username, email, password}) });
+        if (!res.ok) throw new Error('Error al registrar');
+        bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+        alert('Usuario registrado. Ahora inicia sesión.');
+    } catch(e) {
+        const err = document.getElementById('registerError');
+        err.textContent = e.message; err.classList.remove('d-none');
+    }
+}
+
+function showRegisterModal() { new bootstrap.Modal(document.getElementById('registerModal')).show(); }
+
+function showDashboard() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('dashboardPage').style.display = 'block';
+    loadDashboard();
+}
+
+function logout() {
+    localStorage.removeItem('token'); token = null;
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('dashboardPage').style.display = 'none';
+}
+
+// NAV
+function showSection(name, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById(name + 'Section').classList.add('active');
+    el.classList.add('active');
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'products') loadProducts();
+    if (name === 'orders') loadOrders();
+}
+
+// DASHBOARD
+async function loadDashboard() {
+    await Promise.all([loadProductsData(), loadOrdersData()]);
+    document.getElementById('statProducts').textContent = allProducts.length;
+    document.getElementById('statOrders').textContent = allOrders.length;
+    const revenue = allOrders.reduce((s,o) => s + o.total, 0);
+    document.getElementById('statRevenue').textContent = '$' + revenue.toLocaleString();
+    document.getElementById('statPending').textContent = allOrders.filter(o => o.status === 'Pendiente').length;
+    renderSalesChart();
+    renderTopProducts();
+    renderRecentOrders();
+    renderStockChart();
+}
+
+function renderSalesChart() {
+    const salesByProduct = {};
+    allOrders.forEach(o => {
+        if (o.items) o.items.forEach(i => {
+            salesByProduct[i.productName] = (salesByProduct[i.productName] || 0) + (i.price * i.quantity);
+        });
+    });
+    const entries = Object.entries(salesByProduct);
+    if (entries.length === 0) { document.getElementById('salesChart').innerHTML = '<p class="text-muted text-center">Sin datos de ventas aún</p>'; return; }
+    const max = Math.max(...entries.map(e => e[1]));
+    document.getElementById('salesChart').innerHTML = entries.map(([name, val]) => `
+        <div class="bar" style="height:${Math.max((val/max)*130, 10)}px;" title="${name}: $${val.toLocaleString()}">
+            <span class="bar-value">$${(val/1000).toFixed(0)}k</span>
+            <span class="bar-label">${name.length > 10 ? name.substring(0,10)+'...' : name}</span>
+        </div>`).join('');
+}
+
+function renderTopProducts() {
+    const soldByProduct = {};
+    allOrders.forEach(o => {
+        if (o.items) o.items.forEach(i => {
+            soldByProduct[i.productName] = (soldByProduct[i.productName] || 0) + i.quantity;
+        });
+    });
+    const top = Object.entries(soldByProduct).sort((a,b) => b[1]-a[1]).slice(0,5);
+    const max = top[0]?.[1] || 1;
+    document.getElementById('topProducts').innerHTML = top.length === 0 ? '<p class="text-muted small">Sin ventas aún</p>' :
+        top.map(([name, qty], i) => `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span><span class="badge bg-primary me-1">${i+1}</span>${name}</span>
+                    <span class="fw-bold">${qty} uds</span>
+                </div>
+                <div class="bg-light rounded" style="height:8px;">
+                    <div class="bg-success rounded" style="height:8px;width:${(qty/max)*100}%;"></div>
+                </div>
+            </div>`).join('');
+}
+
+function renderRecentOrders() {
+    const tbody = document.getElementById('recentOrdersTable');
+    const recent = [...allOrders].slice(0, 5);
+    tbody.innerHTML = recent.length === 0 ? '<tr><td colspan="4" class="text-center text-muted">Sin órdenes</td></tr>' :
+        recent.map(o => `<tr>
+            <td><span class="badge bg-secondary">#${o.id}</span></td>
+            <td>${o.customerName}</td>
+            <td class="text-success fw-bold">$${o.total.toLocaleString()}</td>
+            <td><span class="badge ${statusColor(o.status)}">${o.status}</span></td>
+        </tr>`).join('');
+}
+
+function renderStockChart() {
+    document.getElementById('stockChart').innerHTML = allProducts.map(p => `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="fw-semibold">${p.nombre}</span>
+                <span class="${p.stock <= 5 ? 'text-danger fw-bold' : 'text-muted'}">${p.stock} uds ${p.stock <= 5 ? '⚠️' : ''}</span>
+            </div>
+            <div class="bg-light rounded" style="height:10px;">
+                <div class="${p.stock <= 5 ? 'bg-danger' : 'bg-primary'} rounded" style="height:10px;width:${Math.min((p.stock/50)*100,100)}%;transition:width 0.5s;"></div>
+            </div>
+        </div>`).join('') || '<p class="text-muted small">Sin productos</p>';
+}
+
+function statusColor(s) {
+    return {'Pendiente':'bg-warning text-dark','En proceso':'bg-info','Enviado':'bg-primary','Entregado':'bg-success'}[s]||'bg-secondary';
+}
+
+// PRODUCTS
+async function loadProductsData() {
+    const res = await fetch('/api/Products', { headers: {'Authorization':'Bearer '+token} });
+    if (res.status === 401) { logout(); return; }
+    allProducts = await res.json();
+}
+
+async function loadProducts() {
+    await loadProductsData();
+    renderProducts(allProducts);
+}
+
+function renderProducts(products) {
+    const tbody = document.getElementById('productsTable');
+    if (!tbody) return;
+    tbody.innerHTML = products.length === 0 ? '<tr><td colspan="7" class="text-center text-muted py-4">No hay productos</td></tr>' :
+        products.map(p => `<tr>
+            <td>${p.imagenUrl
+                ? `<img src="${p.imagenUrl}" class="product-img-preview" alt="${p.nombre}">`
+                : `<div class="product-img-placeholder"><i class="bi bi-box"></i></div>`}</td>
+            <td><strong>${p.nombre}</strong></td>
+            <td><span class="categoria-badge">${p.categoria || 'General'}</span></td>
+            <td class="text-muted small">${p.descripcion}</td>
+            <td><span class="text-success fw-bold">$${p.precio.toLocaleString()}</span></td>
+            <td><span class="badge ${p.stock > 5 ? 'bg-success' : 'bg-danger'}">${p.stock}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${p.id})"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})"><i class="bi bi-trash"></i></button>
+            </td>
+        </tr>`).join('');
+}
+
+function filterProducts() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const cat = document.getElementById('filterCategoria').value;
+    renderProducts(allProducts.filter(p =>
+        (p.nombre.toLowerCase().includes(q) || p.descripcion.toLowerCase().includes(q)) &&
+        (cat === '' || p.categoria === cat)
+    ));
+}
+
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('imagePreview').src = e.target.result;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function openCreateModal() {
+    document.getElementById('modalTitle').textContent = 'Nuevo Producto';
+    document.getElementById('productId').value = '';
+    document.getElementById('productNombre').value = '';
+    document.getElementById('productDescripcion').value = '';
+    document.getElementById('productPrecio').value = '';
+    document.getElementById('productStock').value = '';
+    document.getElementById('productCategoria').value = 'General';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('uploadPlaceholder').style.display = 'block';
+    document.getElementById('currentImage').style.display = 'none';
+    document.getElementById('imageInput').value = '';
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+async function openEditModal(id) {
+    const res = await fetch(`/api/Products/${id}`, { headers: {'Authorization':'Bearer '+token} });
+    const p = await res.json();
+    document.getElementById('modalTitle').textContent = 'Editar Producto';
+    document.getElementById('productId').value = p.id;
+    document.getElementById('productNombre').value = p.nombre;
+    document.getElementById('productDescripcion').value = p.descripcion;
+    document.getElementById('productPrecio').value = p.precio;
+    document.getElementById('productStock').value = p.stock;
+    document.getElementById('productCategoria').value = p.categoria || 'General';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('uploadPlaceholder').style.display = 'block';
+    document.getElementById('imageInput').value = '';
+    if (p.imagenUrl) {
+        document.getElementById('currentImage').style.display = 'block';
+        document.getElementById('currentImagePreview').src = p.imagenUrl;
+    } else {
+        document.getElementById('currentImage').style.display = 'none';
+    }
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+async function saveProduct() {
+    const id = document.getElementById('productId').value;
+    const body = {
+        nombre: document.getElementById('productNombre').value,
+        descripcion: document.getElementById('productDescripcion').value,
+        precio: parseFloat(document.getElementById('productPrecio').value),
+        stock: parseInt(document.getElementById('productStock').value),
+        categoria: document.getElementById('productCategoria').value,
+        imagenUrl: id ? undefined : null
+    };
+    const url = id ? `/api/Products/${id}` : '/api/Products';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, {
+        method, headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body: JSON.stringify(body)
+    });
+    const saved = await res.json();
+
+    // Upload image if selected
+    const imageFile = document.getElementById('imageInput').files[0];
+    if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        await fetch(`/api/Products/${saved.id || id}/imagen`, {
+            method: 'POST',
+            headers: {'Authorization':'Bearer '+token},
+            body: formData
+        });
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+    loadProducts();
+}
+
+async function deleteProduct(id) {
+    if (!confirm('¿Eliminar este producto?')) return;
+    await fetch(`/api/Products/${id}`, { method: 'DELETE', headers: {'Authorization':'Bearer '+token} });
+    loadProducts();
+}
+
+// ORDERS
+async function loadOrdersData() {
+    const res = await fetch('/api/Orders', { headers: {'Authorization':'Bearer '+token} });
+    if (res.status === 401) { logout(); return; }
+    allOrders = await res.json();
+}
+
+async function loadOrders() {
+    await loadOrdersData();
+    filterOrders();
+}
+
+function filterOrders() {
+    const status = document.getElementById('filterStatus')?.value || '';
+    const filtered = status ? allOrders.filter(o => o.status === status) : allOrders;
+    const tbody = document.getElementById('ordersTable');
+    if (!tbody) return;
+    tbody.innerHTML = filtered.length === 0 ? '<tr><td colspan="7" class="text-center text-muted py-4">No hay órdenes</td></tr>' :
+        filtered.map(o => `<tr>
+            <td><span class="badge bg-secondary">#${o.id}</span></td>
+            <td><strong>${o.customerName}</strong><br><small class="text-muted">${o.customerPhone}</small></td>
+            <td class="text-muted small">${o.customerEmail}</td>
+            <td><span class="text-success fw-bold">$${o.total.toLocaleString()}</span></td>
+            <td>
+                <select class="form-select form-select-sm" style="width:130px;" onchange="updateOrderStatus(${o.id}, this.value)">
+                    <option ${o.status==='Pendiente'?'selected':''}>Pendiente</option>
+                    <option ${o.status==='En proceso'?'selected':''}>En proceso</option>
+                    <option ${o.status==='Enviado'?'selected':''}>Enviado</option>
+                    <option ${o.status==='Entregado'?'selected':''}>Entregado</option>
+                </select>
+            </td>
+            <td class="text-muted small">${new Date(o.createdAt).toLocaleDateString()}</td>
+            <td><button class="btn btn-sm btn-outline-info" onclick="viewOrderDetail(${o.id})"><i class="bi bi-eye"></i></button></td>
+        </tr>`).join('');
+}
+
+async function updateOrderStatus(id, status) {
+    await fetch(`/api/Orders/${id}/status`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body: JSON.stringify(status)
+    });
+}
+
+function viewOrderDetail(id) {
+    const order = allOrders.find(o => o.id === id);
+    if (!order) return;
+    document.getElementById('orderDetailBody').innerHTML = `
+        <div class="row mb-3">
+            <div class="col-6"><strong>Cliente:</strong><br>${order.customerName}</div>
+            <div class="col-6"><strong>Email:</strong><br>${order.customerEmail}</div>
+            <div class="col-6 mt-2"><strong>Teléfono:</strong><br>${order.customerPhone}</div>
+            <div class="col-6 mt-2"><strong>Estado:</strong><br><span class="badge ${statusColor(order.status)}">${order.status}</span></div>
+            <div class="col-12 mt-2"><strong>Dirección:</strong><br>${order.customerAddress}</div>
+        </div>
+        <h6 class="fw-bold">Productos del pedido</h6>
+        <table class="table table-sm table-bordered">
+            <thead class="table-light"><tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Subtotal</th></tr></thead>
+            <tbody>${(order.items||[]).map(i => `
+                <tr>
+                    <td>${i.productName}</td>
+                    <td>$${i.price.toLocaleString()}</td>
+                    <td>${i.quantity}</td>
+                    <td>$${(i.price*i.quantity).toLocaleString()}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+        <div class="text-end fw-bold fs-5">Total: <span class="text-success">$${order.total.toLocaleString()}</span></div>`;
+    new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - Titan Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f8fafc; }
+        .navbar { background: #1e293b !important; }
+        .hero { background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); color: white; padding: 60px 0; }
+        .contact-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .info-card { border: none; border-radius: 12px; background: #f0f7ff; padding: 20px; }
+        .icon-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/shop.html"><i class="bi bi-arrow-left me-2"></i>Volver a la tienda</a>
+    </div>
+</nav>
+
+<div class="hero text-center">
+    <h1 class="fw-bold">📬 Contáctanos</h1>
+    <p class="opacity-75">Estamos aquí para ayudarte</p>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-md-5">
+            <h5 class="fw-bold mb-4">Información de contacto</h5>
+            <div class="info-card mb-3 d-flex align-items-center gap-3">
+                <div class="icon-circle bg-primary"><i class="bi bi-whatsapp text-white fs-5"></i></div>
+                <div>
+                    <div class="fw-semibold">WhatsApp</div>
+                    <a href="https://wa.me/573004051875" target="_blank" class="text-primary">+57 300 405 1875</a>
+                </div>
+            </div>
+            <div class="info-card mb-3 d-flex align-items-center gap-3">
+                <div class="icon-circle bg-success"><i class="bi bi-envelope text-white fs-5"></i></div>
+                <div>
+                    <div class="fw-semibold">Email</div>
+                    <a href="mailto:contacto@titanstore.com" class="text-primary">contacto@titanstore.com</a>
+                </div>
+            </div>
+            <div class="info-card mb-3 d-flex align-items-center gap-3">
+                <div class="icon-circle bg-warning"><i class="bi bi-clock text-white fs-5"></i></div>
+                <div>
+                    <div class="fw-semibold">Horario de atención</div>
+                    <small class="text-muted">Lunes a Sábado: 8am - 6pm</small>
+                </div>
+            </div>
+            <div class="info-card d-flex align-items-center gap-3">
+                <div class="icon-circle bg-danger"><i class="bi bi-geo-alt text-white fs-5"></i></div>
+                <div>
+                    <div class="fw-semibold">Ubicación</div>
+                    <small class="text-muted">Cartagena de Indias, Colombia</small>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h6 class="fw-bold mb-3">Síguenos</h6>
+                <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-outline-primary"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="btn btn-outline-danger"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="btn btn-outline-info"><i class="bi bi-twitter-x"></i></a>
+                    <a href="https://wa.me/573004051875" target="_blank" class="btn btn-outline-success"><i class="bi bi-whatsapp"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card contact-card p-4">
+                <h5 class="fw-bold mb-4">Envíanos un mensaje</h5>
+                <div id="successMsg" class="alert alert-success d-none">✅ ¡Mensaje enviado! Te contactaremos pronto.</div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nombre completo</label>
+                    <input type="text" id="contactName" class="form-control" placeholder="Tu nombre">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email" id="contactEmail" class="form-control" placeholder="tu@email.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Asunto</label>
+                    <select id="contactAsunto" class="form-select">
+                        <option>Consulta sobre un producto</option>
+                        <option>Estado de mi pedido</option>
+                        <option>Devolución o cambio</option>
+                        <option>Problema con el pago</option>
+                        <option>Otro</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Mensaje</label>
+                    <textarea id="contactMsg" class="form-control" rows="5" placeholder="Escribe tu mensaje aquí..."></textarea>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary flex-grow-1" onclick="sendContact()">
+                        <i class="bi bi-send me-2"></i>Enviar mensaje
+                    </button>
+                    <a id="whatsappContact" href="https://wa.me/573004051875" target="_blank" class="btn btn-success">
+                        <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-dark text-white text-center py-4 mt-5">
+    <p class="mb-0">© 2026 Titan Store. Todos los derechos reservados.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function sendContact() {
+    const name = document.getElementById('contactName').value.trim();
+    const email = document.getElementById('contactEmail').value.trim();
+    const asunto = document.getElementById('contactAsunto').value;
+    const msg = document.getElementById('contactMsg').value.trim();
+    if (!name || !email || !msg) { alert('Por favor completa todos los campos'); return; }
+    const waMsg = encodeURIComponent(`Hola! Soy ${name} (${email})\nAsunto: ${asunto}\n\n${msg}`);
+    window.open(`https://wa.me/573004051875?text=${waMsg}`, '_blank');
+    document.getElementById('successMsg').classList.remove('d-none');
+    document.getElementById('contactName').value = '';
+    document.getElementById('contactEmail').value = '';
+    document.getElementById('contactMsg').value = '';
+}
+</script>
+</body>
+</html>
